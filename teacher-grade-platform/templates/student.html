@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ row.student['name'] }}{% endblock %}
+{% block content %}
+  <p><a href="{{ url_for('course_detail', course_id=course['id']) }}">&larr; {{ course['name'] }}</a></p>
+  <h1>{{ row.student['name'] }}</h1>
+  {% if row.student['email'] %}<p>{{ row.student['email'] }}</p>{% endif %}
+
+  <p>
+    Course grade:
+    <strong>{% if row.percent is not none %}{{ row.percent }}% ({{ row.letter }}){% else %}not graded yet{% endif %}</strong>
+    from {{ "%g"|format(row.earned) }} of {{ "%g"|format(row.possible) }} points
+    {% if class_average is not none %}&middot; class average {{ class_average }}%{% endif %}
+  </p>
+
+  <table>
+    <tr><th>Assignment</th><th>Due</th><th>Score</th><th>%</th></tr>
+    {% for cell in row.cells %}
+      <tr>
+        <td>{{ cell.assignment['title'] }}</td>
+        <td>{{ cell.assignment['due_date'] }}</td>
+        <td>
+          {% if cell.points is not none %}
+            {{ "%g"|format(cell.points) }} / {{ "%g"|format(cell.assignment['max_points']) }}
+          {% else %}not graded{% endif %}
+        </td>
+        <td>{% if cell.percent is not none %}{{ cell.percent }}%{% else %}&mdash;{% endif %}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="4">No assignments in this course yet.</td></tr>
+    {% endfor %}
+  </table>
+{% endblock %}
