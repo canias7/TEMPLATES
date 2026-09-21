@@ -1,70 +1,49 @@
 # Teacher Grade Platform
 
-A minimal gradebook web app for teachers: create courses, add students and
-assignments, enter scores in one grid, and get per-student and class averages
-with letter grades. Flask + SQLite, server-rendered HTML, no build step.
+A minimal web app where a teacher logs in with email and password, sees only
+the students assigned to them, and edits those students' grades. Changes save
+to the database and survive a page refresh.
 
-## Run it
+- **Live URL:** _(filled in after deployment)_
+- **Auth + database:** Supabase
+- **Hosting:** Vercel (static site, free tier)
+- **Frontend:** plain HTML + JavaScript, no build step
 
-```bash
-cd teacher-grade-platform
-pip install -r requirements.txt
-python seed.py          # optional: demo course with data
-python app.py           # http://127.0.0.1:5000
-```
+## Test accounts
 
-Register your own account at `/register`, or log in with the seeded demo
-account: **demo@school.edu / demo1234**.
+| Email | Password | Their students |
+| --- | --- | --- |
+| teacher.allen@example.com | Teach1234! | Ada Nguyen, Marcus Webb, Priya Raman |
+| teacher.brooks@example.com | Teach1234! | Diego Santos, Hana Kimura, Leo Fitzgerald |
 
-## Tests
+All student names and grades are fake. Log in as one teacher, then the other:
+each sees only their own students, which is enforced by the database itself.
 
-```bash
-python -m unittest test_app -v     # 11 tests, uses a temporary database
-```
+## How the separation works
 
-## What it does
+Each row in `students` carries a `teacher_id` pointing at a Supabase Auth user.
+Row level security policies in `supabase/01_schema.sql` restrict every query to
+`teacher_id = auth.uid()`, so a teacher cannot read or edit another teacher's
+students or grades even by editing the JavaScript in their browser. The
+publishable key in `config.js` is public by design; the policies are what
+protect the data.
 
-| Feature | Where |
-| --- | --- |
-| Teacher register / log in / log out | `/register`, `/login` |
-| Create and delete courses | `/` |
-| Add and remove students | course page |
-| Add and delete assignments (title, max points, due date) | course page |
-| Enter or edit every score in one grid, saved in a single submit | course page |
-| Per-student total, percentage and letter grade | course page + `/courses/<id>/students/<id>` |
-| Class average | course page |
-| CSV export of the gradebook | `/courses/<id>/export.csv` |
+There are only three policies — read students, read grades, update grades.
+No insert or delete is permitted through the app.
 
-## Design notes
-
-- **Percentages only count graded work.** A student's percent is their earned
-  points over the points of the assignments they actually have a score for, so
-  an assignment nobody has been graded on yet never drags an average down.
-- **Blank means "not graded yet."** Clearing a box in the grid deletes the
-  stored score rather than recording a zero. A submit that omits a field
-  entirely leaves that score untouched.
-- **Scores are validated** against the assignment's max points; anything
-  out of range or non-numeric is skipped and reported back to the teacher.
-- **Each teacher only sees their own courses** — every course, student,
-  assignment and grade route checks ownership and returns 404 otherwise.
-- **Deletes cascade** (SQLite foreign keys are on), so removing a course,
-  student or assignment cleans up its grades.
-- Letter scale is the standard 90/80/70/60 cut-off.
-
-## Layout
+## Files
 
 ```
-app.py          all routes and grade logic (~400 lines)
-schema.sql      teachers, courses, students, assignments, grades
-seed.py         demo data
-test_app.py     smoke tests
-templates/      base, login, register, courses, course (gradebook), student
-static/style.css
+index.html            login screen and grade table
+app.js                login, logout, load students, save a grade
+config.js             Supabase URL and publishable key
+supabase/01_schema.sql  tables, indexes, row level security policies
+supabase/02_seed.sql    the two test teachers and their fake class data
 ```
 
-## Not included
+## Redeploying
 
-Kept out deliberately to stay small: student logins, weighted grading
-categories, attendance, and password reset. `app.secret_key` and the dev server
-are development defaults — set `TGP_SECRET` and run behind a real WSGI server
-before using this anywhere real.
+The site is static, so deployment is just uploading these files to Vercel.
+If you connect this GitHub repository to Vercel instead, set the project's
+**Root Directory** to `teacher-grade-platform`, framework preset **Other**,
+and leave the build and output settings empty.
