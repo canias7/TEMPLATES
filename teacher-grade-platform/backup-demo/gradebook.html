@@ -1,0 +1,275 @@
+<title>Teacher Grade Platform</title>
+<style>
+  :root {
+    --ink: #1b2430;
+    --ink-soft: #5a6676;
+    --ground: #f5f6f4;
+    --panel: #ffffff;
+    --line: #d8dcd6;
+    --accent: #2f5d50;
+    --accent-ink: #ffffff;
+    --warn: #8a4b2a;
+    --ok: #2f5d50;
+    --radius: 6px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #e8eae6;
+      --ink-soft: #9aa5b1;
+      --ground: #161a19;
+      --panel: #1f2523;
+      --line: #333b38;
+      --accent: #7fbfa8;
+      --accent-ink: #12201b;
+      --warn: #e0a179;
+      --ok: #7fbfa8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #e8eae6;
+    --ink-soft: #9aa5b1;
+    --ground: #161a19;
+    --panel: #1f2523;
+    --line: #333b38;
+    --accent: #7fbfa8;
+    --accent-ink: #12201b;
+    --warn: #e0a179;
+    --ok: #7fbfa8;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 48px; }
+  h1 { font-size: 1.35rem; margin: 0 0 4px; text-wrap: balance; }
+  h2 { font-size: 1rem; margin: 28px 0 10px; }
+  .sub { color: var(--ink-soft); margin: 0 0 24px; font-size: .9rem; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+  label { display: block; margin-bottom: 12px; font-size: .85rem; color: var(--ink-soft); }
+  input {
+    display: block; width: 100%; max-width: 320px; margin-top: 4px; padding: 7px 9px;
+    font: inherit; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: var(--radius); box-sizing: border-box;
+  }
+  button {
+    font: inherit; padding: 7px 14px; cursor: pointer; border-radius: var(--radius);
+    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  }
+  button.quiet { background: transparent; color: var(--ink); border-color: var(--line); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .who { font-size: .9rem; color: var(--ink-soft); }
+  .who strong { color: var(--ink); }
+
+  .scroller { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; }
+  td input { width: 5.5rem; margin: 0; }
+  tr:last-child td { border-bottom: none; }
+
+  #msg { margin: 14px 0 0; font-size: .88rem; min-height: 1.2em; color: var(--ok); }
+  #msg.bad { color: var(--warn); }
+  .creds { margin-top: 28px; font-size: .85rem; color: var(--ink-soft); }
+  .creds code { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+  .note { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); font-size: .82rem; color: var(--ink-soft); }
+</style>
+
+<div class="wrap">
+  <h1>Teacher Grade Platform</h1>
+  <p class="sub">Each teacher signs in and sees only their own students. Grade changes are saved and survive a refresh.</p>
+
+  <section id="login" class="panel" hidden>
+    <h2 style="margin-top:0">Teacher sign in</h2>
+    <form id="login-form">
+      <label>Email
+        <input id="email" type="email" autocomplete="username" required>
+      </label>
+      <label>Password
+        <input id="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">Sign in</button>
+    </form>
+    <div class="creds">
+      <p style="margin:0 0 6px">Test accounts:</p>
+      <p style="margin:0"><code>teacher.allen@example.com</code> / <code>Teach1234!</code></p>
+      <p style="margin:4px 0 0"><code>teacher.brooks@example.com</code> / <code>Teach1234!</code></p>
+    </div>
+  </section>
+
+  <section id="dash" hidden>
+    <div class="bar">
+      <span class="who">Signed in as <strong id="who"></strong></span>
+      <button id="logout" class="quiet" type="button">Log out</button>
+    </div>
+    <div class="panel scroller">
+      <table>
+        <thead>
+          <tr><th>Student</th><th>Subject</th><th>Grade</th><th></th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <p id="msg" role="status"></p>
+
+  <p class="note" id="note">All students and grades below are fictional test data.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Two fixed teacher accounts. Only SHA-256 digests of "email:password"
+  // are in the page, so the passwords themselves are not stored here.
+  var TEACHERS = {
+    "2c92bd6301ea95ea0741c3fa72e38b43c565fc80598094421e87c25018e61ea7":
+      { id: "allen", email: "teacher.allen@example.com", name: "Ms. Allen" },
+    "3acf3573f067b62589dba4e0846950201d5210e911b6e50c681a429eff27484c":
+      { id: "brooks", email: "teacher.brooks@example.com", name: "Mr. Brooks" }
+  };
+
+  var el = function (id) { return document.getElementById(id); };
+  var db = null;
+  var teacher = null;
+  var rows = [];
+
+  function say(text, bad) {
+    var box = el("msg");
+    box.textContent = text || "";
+    box.classList.toggle("bad", !!bad);
+  }
+
+  function show(which) {
+    el("login").hidden = which !== "login";
+    el("dash").hidden = which !== "dash";
+  }
+
+  async function digest(text) {
+    var bytes = new TextEncoder().encode(text);
+    var hash = await crypto.subtle.digest("SHA-256", bytes);
+    return Array.from(new Uint8Array(hash))
+      .map(function (b) { return b.toString(16).padStart(2, "0"); })
+      .join("");
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function render() {
+    if (!rows.length) {
+      el("rows").innerHTML = "<tr><td colspan='4'>No students assigned to you.</td></tr>";
+      return;
+    }
+    el("rows").innerHTML = rows.map(function (row) {
+      return "<tr>" +
+        "<td>" + escapeHtml(row.student) + "</td>" +
+        "<td>" + escapeHtml(row.subject) + "</td>" +
+        "<td><input type='number' min='0' max='100' step='0.5' id='in-" + row.id +
+        "' value='" + escapeHtml(row.score) + "' aria-label='" +
+        escapeHtml(row.student + " " + row.subject + " grade") + "'></td>" +
+        "<td><button type='button' data-save='" + row.id + "'>Save</button></td>" +
+        "</tr>";
+    }).join("");
+  }
+
+  async function loadRows() {
+    say("Loading your students...");
+    try {
+      var found = await db.collection("grades").where("teacher", "==", teacher.id).get();
+      rows = found.map(function (doc) {
+        var d = doc.data ? doc.data() : doc;
+        return { id: doc.id || d.id, student: d.student, subject: d.subject, score: d.score };
+      }).sort(function (a, b) {
+        return a.student.localeCompare(b.student) || a.subject.localeCompare(b.subject);
+      });
+      render();
+      say("");
+    } catch (err) {
+      say("Could not load grades: " + (err && err.message ? err.message : err), true);
+    }
+  }
+
+  async function saveGrade(id) {
+    var input = el("in-" + id);
+    var score = Number(input.value);
+    if (input.value.trim() === "" || Number.isNaN(score) || score < 0 || score > 100) {
+      say("Grade must be a number between 0 and 100.", true);
+      return;
+    }
+    try {
+      await db.doc("grades/" + id).update({ score: score });
+      var row = rows.filter(function (r) { return r.id === id; })[0];
+      if (row) { row.score = score; }
+      say("Saved. Refresh the page and the new grade is still there.");
+    } catch (err) {
+      say("Save failed: " + (err && err.message ? err.message : err), true);
+    }
+  }
+
+  el("login-form").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    var email = el("email").value.trim().toLowerCase();
+    var key = await digest(email + ":" + el("password").value);
+    var match = TEACHERS[key];
+    if (!match || match.email !== email) {
+      say("Wrong email or password.", true);
+      return;
+    }
+    teacher = match;
+    el("password").value = "";
+    el("who").textContent = teacher.name + " (" + teacher.email + ")";
+    try { sessionStorage.setItem("tgp-teacher", teacher.id); } catch (e) { /* fine without it */ }
+    show("dash");
+    say("");
+    await loadRows();
+  });
+
+  el("logout").addEventListener("click", function () {
+    teacher = null;
+    rows = [];
+    el("rows").innerHTML = "";
+    try { sessionStorage.removeItem("tgp-teacher"); } catch (e) { /* fine without it */ }
+    show("login");
+    say("");
+  });
+
+  el("rows").addEventListener("click", function (event) {
+    var button = event.target.closest("[data-save]");
+    if (button) { saveGrade(button.dataset.save); }
+  });
+
+  show("login");
+  say("Connecting to the grade store...");
+
+  (async function start() {
+    db = window.claude && window.claude.use ? await window.claude.use("db") : null;
+    if (!db) {
+      say("The grade store is unavailable in this view, so grades cannot be loaded or saved.", true);
+      return;
+    }
+    say("");
+    var remembered = null;
+    try { remembered = sessionStorage.getItem("tgp-teacher"); } catch (e) { /* fine without it */ }
+    if (remembered) {
+      var keys = Object.keys(TEACHERS);
+      for (var i = 0; i < keys.length; i++) {
+        if (TEACHERS[keys[i]].id === remembered) { teacher = TEACHERS[keys[i]]; }
+      }
+      if (teacher) {
+        el("who").textContent = teacher.name + " (" + teacher.email + ")";
+        show("dash");
+        await loadRows();
+      }
+    }
+  })();
+})();
+</script>
