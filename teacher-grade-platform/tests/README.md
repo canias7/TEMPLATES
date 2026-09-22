@@ -4,7 +4,7 @@
 Run in the Supabase SQL editor after `../supabase/setup.sql`. It signs in as
 each teacher in turn and tries to read and overwrite the other teacher's data
 by its real row id, bypassing the UI entirely. Expected answers are in the
-comments: 3 students each, 0 rows visible, 0 rows updated across teachers.
+comments: 8 students each, 0 rows visible, 0 rows updated across teachers.
 
 Result when run against a local PostgreSQL 16 with the Supabase `auth` schema
 stubbed in:
@@ -12,11 +12,11 @@ stubbed in:
 | Check | Result |
 | --- | --- |
 | Password `Teach1234!` verifies, a wrong one does not | pass |
-| Ms. Allen sees 3 students / 9 grades, none of Mr. Brooks's | pass |
-| Ms. Allen updates her own student's grade | 1 row |
-| Ms. Allen reads Mr. Brooks's grade row by id | 0 rows |
-| Ms. Allen updates Mr. Brooks's grade row by id | 0 rows |
-| Mr. Brooks sees his own 3 students, data intact | pass |
+| Test Teacher One sees 8 students / 24 grades, none of Teacher Two's | pass |
+| Test Teacher One updates her own student's grade | 1 row |
+| Test Teacher One reads Teacher Two's grade row by id | 0 rows |
+| Test Teacher One updates Teacher Two's grade row by id | 0 rows |
+| Test Teacher Two sees their own 8 students, data intact | pass |
 | Signed out, no JWT | 0 rows visible |
 
 ## `ui_test.py`

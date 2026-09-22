@@ -13,7 +13,7 @@
 
 do $$
 declare
-  new_email    text := 'teacher.carter@example.com';   -- EDIT: their email
+  new_email    text := 'test.teacher3@example.com';   -- EDIT: their email
   new_password text := 'Teach1234!';                   -- EDIT: their password
   new_teacher  uuid;
   sid          uuid;

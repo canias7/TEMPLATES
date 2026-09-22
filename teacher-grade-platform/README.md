@@ -11,10 +11,22 @@ to the database and survive a refresh.
 
 ## Test accounts
 
-| Email | Password | Their students |
+Both accounts are **clearly marked test accounts**, and the app shows a
+TEST ENVIRONMENT banner on every screen.
+
+| Email | Password | Class |
 | --- | --- | --- |
-| teacher.allen@example.com | Teach1234! | Ada Nguyen, Marcus Webb, Priya Raman |
-| teacher.brooks@example.com | Teach1234! | Diego Santos, Hana Kimura, Leo Fitzgerald |
+| test.teacher1@example.com | Teach1234! | 8 students, Math / Science / English |
+| test.teacher2@example.com | Teach1234! | 8 students, History / Art |
+
+**Test Teacher One:** Ada Nguyen, Marcus Webb, Priya Raman, Jonah Feldman,
+Sofia Castillo, Emmett Boyle, Leila Haddad, Owen Pritchard.
+
+**Test Teacher Two:** Diego Santos, Hana Kimura, Leo Fitzgerald, Maya Thornton,
+Rashid Karim, Ingrid Solberg, Caleb Mwangi, Yuki Tanaka.
+
+The two rosters share no students, so signing in as one and then the other
+shows two completely separate classes.
 
 Both logins are **created automatically** by `supabase/setup.sql` — there is no
 sign-up screen to click through and no account to make by hand. All student
@@ -26,8 +38,8 @@ Edit the two marked lines in `supabase/add-teacher.sql` (email and password),
 adjust the student list at the bottom, and run it in the SQL Editor. The new
 teacher can log in straight away and sees only the students created for them.
 Existing teachers are unaffected. Verified: a third teacher added this way had
-a working password, saw only their own 2 students, and saw 0 rows belonging to
-the other two teachers.
+a working password, saw only their own students, and saw 0 rows belonging to
+the other teachers.
 
 ## Setup
 
@@ -44,8 +56,8 @@ the other two teachers.
 Some Supabase versions restrict writing to `auth.users` from SQL. Fallback:
 
 1. Go to **Authentication → Users → Add user**.
-2. Add `teacher.allen@example.com` with password `Teach1234!`, and tick
-   **Auto Confirm User**. Repeat for `teacher.brooks@example.com`.
+2. Add `test.teacher1@example.com` with password `Teach1234!`, and tick
+   **Auto Confirm User**. Repeat for `test.teacher2@example.com`.
 3. Run `supabase/setup.sql` again. It looks the teachers up by email, finds the
    ones you just made, and only adds the students and grades.
 
@@ -68,9 +80,10 @@ in Chromium against a stubbed client. Details and the exact commands are in
 
 | Check | Result |
 | --- | --- |
-| `setup.sql` runs clean; creates 2 teachers, 6 students, 15 grades | pass |
+| `setup.sql` runs clean; creates 2 test teachers, 16 students, 40 grades | pass |
 | Password `Teach1234!` verifies; a wrong password does not | pass |
-| Each teacher sees exactly their own 3 students | pass |
+| Each test teacher sees exactly their own 8 students | pass |
+| The two rosters overlap | 0 students |
 | Teacher A reads teacher B's grade row by its real id | 0 rows |
 | Teacher A updates teacher B's grade row by its real id | 0 rows |
 | Signed out with no session | 0 rows visible |

@@ -3,8 +3,8 @@
 -- match the comment next to it.
 
 \set QUIET on
-select id as allen  from auth.users where email = 'teacher.allen@example.com'  \gset
-select id as brooks from auth.users where email = 'teacher.brooks@example.com' \gset
+select id as allen  from auth.users where email = 'test.teacher1@example.com'  \gset
+select id as brooks from auth.users where email = 'test.teacher2@example.com' \gset
 select g.id as brooks_grade from public.grades g
   join public.students s on s.id = g.student_id
   where s.full_name = 'Diego Santos' and g.subject = 'Art' \gset
@@ -14,8 +14,8 @@ set role authenticated;
 
 -- Acting as Ms. Allen
 select set_config('request.jwt.claim.sub', :'allen', false);
-select count(*) as allen_students from public.students;   -- 3
-select count(*) as allen_grades   from public.grades;     -- 9
+select count(*) as allen_students from public.students;   -- 8
+select count(*) as allen_grades   from public.grades;     -- 24
 
 -- Allen tries to read and edit one of Mr. Brooks's grades by its real id
 select count(*) as brooks_row_visible_to_allen
@@ -26,7 +26,7 @@ select count(*) as brooks_row_updated_by_allen from attempt;  -- 0
 
 -- Acting as Mr. Brooks
 select set_config('request.jwt.claim.sub', :'brooks', false);
-select count(*) as brooks_students from public.students;  -- 3
+select count(*) as brooks_students from public.students;  -- 8
 select score as diego_art_untouched from public.grades g
   join public.students s on s.id = g.student_id
   where s.full_name = 'Diego Santos' and g.subject = 'Art';   -- 91

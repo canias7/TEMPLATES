@@ -1,13 +1,14 @@
 -- ============================================================
 -- Teacher Grade Platform - COMPLETE SETUP
 -- Paste this whole file into the Supabase SQL Editor and click Run.
--- It creates the tables, the security rules, the two test teachers,
--- and their fake students and grades. Safe to run more than once.
+-- Creates the tables, the security rules, two TEST teacher logins, and
+-- their fictional students and grades. Safe to run more than once.
+--
+--   TEST ACCOUNT 1: test.teacher1@example.com  /  Teach1234!   (8 students)
+--   TEST ACCOUNT 2: test.teacher2@example.com  /  Teach1234!   (8 students)
+--
+-- Every teacher, student and grade below is invented test data.
 -- ============================================================
-
--- Teacher Grade Platform schema.
--- Teachers are Supabase Auth users; row level security is what stops one
--- teacher from seeing another teacher's students.
 
 create table if not exists public.students (
   id         uuid primary key default gen_random_uuid(),
@@ -58,87 +59,133 @@ create policy "teachers update their own students grades"
 
 -- No insert or delete policies: the app only reads and edits grades, so
 -- nothing else is permitted through the public API.
--- Two test teachers with completely separate fake students and fake grades.
--- Re-running this resets the seeded students and grades to these values.
---
---   teacher.allen@example.com  / Teach1234!
---   teacher.brooks@example.com / Teach1234!
+
+-- ------------------------------------------------------------
+-- TEST DATA: two test teachers, 8 fictional students each.
+-- ------------------------------------------------------------
 
 do $$
 declare
-  allen_id  uuid;
-  brooks_id uuid;
-  sid       uuid;
+  t1 uuid;
+  t2 uuid;
 begin
-  -- ---------------------------------------------------------------- users --
-  select id into allen_id from auth.users where email = 'teacher.allen@example.com';
-  if allen_id is null then
-    allen_id := gen_random_uuid();
+  select id into t1 from auth.users where email = 'test.teacher1@example.com';
+  if t1 is null then
+    t1 := gen_random_uuid();
     insert into auth.users (
       instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
       created_at, updated_at, raw_app_meta_data, raw_user_meta_data,
       confirmation_token, recovery_token, email_change_token_new, email_change)
     values (
-      '00000000-0000-0000-0000-000000000000', allen_id, 'authenticated',
-      'authenticated', 'teacher.allen@example.com',
-      crypt('Teach1234!', gen_salt('bf')), now(), now(), now(),
+      '00000000-0000-0000-0000-000000000000', t1, 'authenticated',
+      'authenticated', 'test.teacher1@example.com', crypt('Teach1234!', gen_salt('bf')),
+      now(), now(), now(),
       '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb,
       '', '', '', '');
     insert into auth.identities (
       provider_id, user_id, identity_data, provider,
       last_sign_in_at, created_at, updated_at)
     values (
-      allen_id::text, allen_id,
-      json_build_object('sub', allen_id::text,
-                        'email', 'teacher.allen@example.com',
+      t1::text, t1,
+      json_build_object('sub', t1::text, 'email', 'test.teacher1@example.com',
                         'email_verified', true)::jsonb,
       'email', now(), now(), now());
   end if;
 
-  select id into brooks_id from auth.users where email = 'teacher.brooks@example.com';
-  if brooks_id is null then
-    brooks_id := gen_random_uuid();
+  select id into t2 from auth.users where email = 'test.teacher2@example.com';
+  if t2 is null then
+    t2 := gen_random_uuid();
     insert into auth.users (
       instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
       created_at, updated_at, raw_app_meta_data, raw_user_meta_data,
       confirmation_token, recovery_token, email_change_token_new, email_change)
     values (
-      '00000000-0000-0000-0000-000000000000', brooks_id, 'authenticated',
-      'authenticated', 'teacher.brooks@example.com',
-      crypt('Teach1234!', gen_salt('bf')), now(), now(), now(),
+      '00000000-0000-0000-0000-000000000000', t2, 'authenticated',
+      'authenticated', 'test.teacher2@example.com', crypt('Teach1234!', gen_salt('bf')),
+      now(), now(), now(),
       '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb,
       '', '', '', '');
     insert into auth.identities (
       provider_id, user_id, identity_data, provider,
       last_sign_in_at, created_at, updated_at)
     values (
-      brooks_id::text, brooks_id,
-      json_build_object('sub', brooks_id::text,
-                        'email', 'teacher.brooks@example.com',
+      t2::text, t2,
+      json_build_object('sub', t2::text, 'email', 'test.teacher2@example.com',
                         'email_verified', true)::jsonb,
       'email', now(), now(), now());
   end if;
 
-  -- ------------------------------------------------------ fake class data --
-  delete from public.students where teacher_id in (allen_id, brooks_id);
+  -- reset the seeded class lists so re-running gives the same result
+  delete from public.students where teacher_id in (t1, t2);
 
-  -- Ms. Allen's students (all fake)
-  insert into public.students (teacher_id, full_name) values (allen_id, 'Ada Nguyen') returning id into sid;
-  insert into public.grades (student_id, subject, score) values (sid, 'Math', 88), (sid, 'Science', 92), (sid, 'English', 79);
+  insert into public.students (teacher_id, full_name)
+  select t1, name from unnest(array[
+    'Ada Nguyen',
+    'Marcus Webb',
+    'Priya Raman',
+    'Jonah Feldman',
+    'Sofia Castillo',
+    'Emmett Boyle',
+    'Leila Haddad',
+    'Owen Pritchard'
+  ]) as name;
 
-  insert into public.students (teacher_id, full_name) values (allen_id, 'Marcus Webb') returning id into sid;
-  insert into public.grades (student_id, subject, score) values (sid, 'Math', 71), (sid, 'Science', 65), (sid, 'English', 83);
+  insert into public.students (teacher_id, full_name)
+  select t2, name from unnest(array[
+    'Diego Santos',
+    'Hana Kimura',
+    'Leo Fitzgerald',
+    'Maya Thornton',
+    'Rashid Karim',
+    'Ingrid Solberg',
+    'Caleb Mwangi',
+    'Yuki Tanaka'
+  ]) as name;
 
-  insert into public.students (teacher_id, full_name) values (allen_id, 'Priya Raman') returning id into sid;
-  insert into public.grades (student_id, subject, score) values (sid, 'Math', 95), (sid, 'Science', 90), (sid, 'English', 97);
-
-  -- Mr. Brooks's students (all fake, completely different people)
-  insert into public.students (teacher_id, full_name) values (brooks_id, 'Diego Santos') returning id into sid;
-  insert into public.grades (student_id, subject, score) values (sid, 'History', 84), (sid, 'Art', 91);
-
-  insert into public.students (teacher_id, full_name) values (brooks_id, 'Hana Kimura') returning id into sid;
-  insert into public.grades (student_id, subject, score) values (sid, 'History', 76), (sid, 'Art', 88);
-
-  insert into public.students (teacher_id, full_name) values (brooks_id, 'Leo Fitzgerald') returning id into sid;
-  insert into public.grades (student_id, subject, score) values (sid, 'History', 69), (sid, 'Art', 73);
+  insert into public.grades (student_id, subject, score)
+  select s.id, v.subject, v.score
+  from (values
+    ('Ada Nguyen', 'Math', 88),
+    ('Ada Nguyen', 'Science', 92),
+    ('Ada Nguyen', 'English', 79),
+    ('Marcus Webb', 'Math', 71),
+    ('Marcus Webb', 'Science', 65),
+    ('Marcus Webb', 'English', 83),
+    ('Priya Raman', 'Math', 95),
+    ('Priya Raman', 'Science', 90),
+    ('Priya Raman', 'English', 97),
+    ('Jonah Feldman', 'Math', 64),
+    ('Jonah Feldman', 'Science', 72),
+    ('Jonah Feldman', 'English', 70),
+    ('Sofia Castillo', 'Math', 82),
+    ('Sofia Castillo', 'Science', 88),
+    ('Sofia Castillo', 'English', 91),
+    ('Emmett Boyle', 'Math', 77),
+    ('Emmett Boyle', 'Science', 59),
+    ('Emmett Boyle', 'English', 68),
+    ('Leila Haddad', 'Math', 93),
+    ('Leila Haddad', 'Science', 96),
+    ('Leila Haddad', 'English', 89),
+    ('Owen Pritchard', 'Math', 58),
+    ('Owen Pritchard', 'Science', 63),
+    ('Owen Pritchard', 'English', 74),
+    ('Diego Santos', 'History', 84),
+    ('Diego Santos', 'Art', 91),
+    ('Hana Kimura', 'History', 76),
+    ('Hana Kimura', 'Art', 88),
+    ('Leo Fitzgerald', 'History', 69),
+    ('Leo Fitzgerald', 'Art', 73),
+    ('Maya Thornton', 'History', 90),
+    ('Maya Thornton', 'Art', 85),
+    ('Rashid Karim', 'History', 62),
+    ('Rashid Karim', 'Art', 78),
+    ('Ingrid Solberg', 'History', 88),
+    ('Ingrid Solberg', 'Art', 94),
+    ('Caleb Mwangi', 'History', 73),
+    ('Caleb Mwangi', 'Art', 67),
+    ('Yuki Tanaka', 'History', 81),
+    ('Yuki Tanaka', 'Art', 92)
+  ) as v(student, subject, score)
+  join public.students s
+    on s.full_name = v.student and s.teacher_id in (t1, t2);
 end $$;

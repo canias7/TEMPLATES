@@ -74,6 +74,8 @@
 
   #msg { margin: 14px 0 0; font-size: .88rem; min-height: 1.2em; color: var(--ok); }
   #msg.bad { color: var(--warn); }
+  .banner { margin: 0 0 20px; padding: 9px 12px; border: 1px solid var(--warn);
+            border-radius: var(--radius); font-size: .85rem; color: var(--ink); }
   .creds { margin-top: 28px; font-size: .85rem; color: var(--ink-soft); }
   .creds code { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
   .note { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); font-size: .82rem; color: var(--ink-soft); }
@@ -82,6 +84,7 @@
 <div class="wrap">
   <h1>Teacher Grade Platform</h1>
   <p class="sub">Each teacher signs in and sees only their own students. Grade changes are saved and survive a refresh.</p>
+  <p class="banner"><strong>TEST ENVIRONMENT.</strong> Both accounts are test teachers and every student name and grade is fictional. No real people or school records are involved.</p>
 
   <section id="login" class="panel" hidden>
     <h2 style="margin-top:0">Teacher sign in</h2>
@@ -96,8 +99,8 @@
     </form>
     <div class="creds">
       <p style="margin:0 0 6px">Test accounts:</p>
-      <p style="margin:0"><code>teacher.allen@example.com</code> / <code>Teach1234!</code></p>
-      <p style="margin:4px 0 0"><code>teacher.brooks@example.com</code> / <code>Teach1234!</code></p>
+      <p style="margin:0"><code>test.teacher1@example.com</code> / <code>Teach1234!</code> — 8 students</p>
+      <p style="margin:4px 0 0"><code>test.teacher2@example.com</code> / <code>Teach1234!</code> — 8 different students</p>
     </div>
   </section>
 
@@ -118,7 +121,7 @@
 
   <p id="msg" role="status"></p>
 
-  <p class="note" id="note">All students and grades below are fictional test data.</p>
+  <p class="note" id="note">Test data only: 2 test teacher accounts, 8 fictional students each.</p>
 </div>
 
 <script>
@@ -128,10 +131,10 @@
   // Two fixed teacher accounts. Only SHA-256 digests of "email:password"
   // are in the page, so the passwords themselves are not stored here.
   var TEACHERS = {
-    "2c92bd6301ea95ea0741c3fa72e38b43c565fc80598094421e87c25018e61ea7":
-      { id: "allen", email: "teacher.allen@example.com", name: "Ms. Allen" },
-    "3acf3573f067b62589dba4e0846950201d5210e911b6e50c681a429eff27484c":
-      { id: "brooks", email: "teacher.brooks@example.com", name: "Mr. Brooks" }
+    "40115895d35938a78c8006eabce20d12bdcf674df60d3c228726103cac476958":
+      { id: "t1", email: "test.teacher1@example.com", name: "Test Teacher One" },
+    "7dda080a675af37bcca74cee2616acf4138da430bad4aadd5aade445e7e6552c":
+      { id: "t2", email: "test.teacher2@example.com", name: "Test Teacher Two" }
   };
 
   var el = function (id) { return document.getElementById(id); };

@@ -36,23 +36,25 @@ with sync_playwright() as p:
     check("dashboard hidden before login", page.is_hidden("#dashboard-view"), True)
 
     print("\n[2] Wrong password is rejected")
-    page.fill("#email", "teacher.allen@example.com")
+    page.fill("#email", "test.teacher1@example.com")
     page.fill("#password", "wrong")
     page.click("#login-form button")
     page.wait_for_function("document.getElementById('status').textContent.includes('Login failed')")
     check("still on login screen", page.is_hidden("#dashboard-view"), True)
 
-    print("\n[3] Ms. Allen logs in and sees only her students")
+    print("\n[3] Test Teacher One logs in and sees only her 8 students")
     page.fill("#password", "Teach1234!")
     page.click("#login-form button")
     page.wait_for_selector("#dashboard-view:not(.hidden)")
     names = page.eval_on_selector_all("#rows tr td:first-child",
                                       "els => [...new Set(els.map(e => e.textContent))]")
-    check("allen's students", sorted(names), ["Ada Nguyen", "Marcus Webb", "Priya Raman"])
-    check("grade rows visible", page.locator("#rows tr").count(), 9)
-    check("logged-in email shown", page.inner_text("#who"), "teacher.allen@example.com")
-    check("no brooks student leaked",
-          any(n in names for n in ["Diego Santos", "Hana Kimura", "Leo Fitzgerald"]), False)
+    check("test teacher 1 roster (8 students)", sorted(names),
+          ["Ada Nguyen", "Emmett Boyle", "Jonah Feldman", "Leila Haddad",
+           "Marcus Webb", "Owen Pritchard", "Priya Raman", "Sofia Castillo"])
+    check("grade rows visible", page.locator("#rows tr").count(), 24)
+    check("logged-in email shown", page.inner_text("#who"), "test.teacher1@example.com")
+    check("no teacher-2 student leaked",
+          any(n in names for n in ["Diego Santos", "Maya Thornton", "Yuki Tanaka"]), False)
 
     print("\n[4] Editing a grade saves it")
     first = page.locator("#rows input[type=number]").first
@@ -75,17 +77,19 @@ with sync_playwright() as p:
     check("dashboard hidden after logout", page.is_hidden("#dashboard-view"), True)
     check("grade rows cleared", page.locator("#rows tr").count(), 0)
 
-    print("\n[7] Mr. Brooks logs in and sees a completely different class")
-    page.fill("#email", "teacher.brooks@example.com")
+    print("\n[7] Test Teacher Two logs in and sees a completely different class of 8")
+    page.fill("#email", "test.teacher2@example.com")
     page.fill("#password", "Teach1234!")
     page.click("#login-form button")
     page.wait_for_selector("#dashboard-view:not(.hidden)")
     names = page.eval_on_selector_all("#rows tr td:first-child",
                                       "els => [...new Set(els.map(e => e.textContent))]")
-    check("brooks's students", sorted(names),
-          ["Diego Santos", "Hana Kimura", "Leo Fitzgerald"])
-    check("no allen student leaked",
-          any(n in names for n in ["Ada Nguyen", "Marcus Webb", "Priya Raman"]), False)
+    check("test teacher 2 roster (8 students)", sorted(names),
+          ["Caleb Mwangi", "Diego Santos", "Hana Kimura", "Ingrid Solberg",
+           "Leo Fitzgerald", "Maya Thornton", "Rashid Karim", "Yuki Tanaka"])
+    check("grade rows visible", page.locator("#rows tr").count(), 16)
+    check("no teacher-1 student leaked",
+          any(n in names for n in ["Ada Nguyen", "Sofia Castillo", "Leila Haddad"]), False)
 
     page.screenshot(path=str(pathlib.Path(__file__).with_name("ui-brooks.png")), full_page=True)
     browser.close()
