@@ -3,7 +3,8 @@
 (function () {
   var TEACHERS = {
     "teacher.allen@example.com": { id: "allen", password: "Teach1234!" },
-    "teacher.brooks@example.com": { id: "brooks", password: "Teach1234!" }
+    "teacher.brooks@example.com": { id: "brooks", password: "Teach1234!" },
+    "teacher.carter@example.com": { id: "carter", password: "Teach1234!" }
   };
   var STUDENTS = [
     { id: "s1", teacher: "allen", full_name: "Ada Nguyen" },
@@ -11,7 +12,9 @@
     { id: "s3", teacher: "allen", full_name: "Priya Raman" },
     { id: "s4", teacher: "brooks", full_name: "Diego Santos" },
     { id: "s5", teacher: "brooks", full_name: "Hana Kimura" },
-    { id: "s6", teacher: "brooks", full_name: "Leo Fitzgerald" }
+    { id: "s6", teacher: "brooks", full_name: "Leo Fitzgerald" },
+    { id: "s7", teacher: "carter", full_name: "Nia Osei" },
+    { id: "s8", teacher: "carter", full_name: "Tomas Reyes" }
   ];
   var GRADES = [
     { id: "g1", student: "s1", subject: "Math", score: 88 },
@@ -28,7 +31,11 @@
     { id: "g12", student: "s5", subject: "History", score: 76 },
     { id: "g13", student: "s5", subject: "Art", score: 88 },
     { id: "g14", student: "s6", subject: "History", score: 69 },
-    { id: "g15", student: "s6", subject: "Art", score: 73 }
+    { id: "g15", student: "s6", subject: "Art", score: 73 },
+    { id: "g16", student: "s7", subject: "Biology", score: 87 },
+    { id: "g17", student: "s7", subject: "Chemistry", score: 91 },
+    { id: "g18", student: "s8", subject: "Biology", score: 74 },
+    { id: "g19", student: "s8", subject: "Chemistry", score: 68 }
   ];
 
   var session = null;

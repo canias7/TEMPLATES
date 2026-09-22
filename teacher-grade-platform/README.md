@@ -20,6 +20,15 @@ Both logins are **created automatically** by `supabase/setup.sql` — there is n
 sign-up screen to click through and no account to make by hand. All student
 names and grades are fictional.
 
+### Adding another teacher
+
+Edit the two marked lines in `supabase/add-teacher.sql` (email and password),
+adjust the student list at the bottom, and run it in the SQL Editor. The new
+teacher can log in straight away and sees only the students created for them.
+Existing teachers are unaffected. Verified: a third teacher added this way had
+a working password, saw only their own 2 students, and saw 0 rows belonging to
+the other two teachers.
+
 ## Setup
 
 1. Create a free Supabase project.
@@ -76,6 +85,7 @@ index.html              login screen and grade table
 app.js                  login, logout, load students, save a grade
 config.js               Supabase URL and publishable key
 supabase/setup.sql      tables, security rules, teachers, fake class data
+supabase/add-teacher.sql  adds another teacher and their students
 tests/isolation_test.sql  cross-teacher access proof, for the SQL editor
 tests/ui_test.py          browser test of the interface
 tests/mock-supabase.js    stubbed client so the UI runs without a project
